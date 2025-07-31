@@ -11,27 +11,22 @@ spring:
     password: postgres
 
   jpa:
-    hibernate:
-      ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
 
   kafka:
     bootstrap-servers: localhost:9092
-    consumer:
-      group-id: order-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      bootstrap-servers: localhost:9092
+      properties:
+        spring.json.add.type.headers: false
+
     admin:
       auto-create: true
     properties:
-      spring.json.add.type.headers: false
-      # server.properties
-    auto:
-      create:
-        topics:
-          enable: true
+      # Optional: trusted packages globally
+      spring.json.trusted.packages: "*"

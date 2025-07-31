@@ -21,6 +21,8 @@ public class OrderResponse {
     private Double productPrice;
     private Integer quantity;
 
+    private Double amount;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 

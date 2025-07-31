@@ -1,6 +1,6 @@
 package com.example.Order.config;
 
-import com.example.Order.dto.request.TransactionRequest;
+import com.example.Order.dto.request.OrderTransactionRequest;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +15,7 @@ import java.util.Map;
 public class KafkaOrderProducerConfig {
 
     @Bean
-    public ProducerFactory<String, TransactionRequest> paymentRequestProducerFactory() {
+    public ProducerFactory<String, OrderTransactionRequest> paymentRequestProducerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         config.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
@@ -28,7 +28,7 @@ public class KafkaOrderProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, TransactionRequest> paymentKafkaTemplate() {
+    public KafkaTemplate<String, OrderTransactionRequest> paymentKafkaTemplate() {
         return new KafkaTemplate<>(paymentRequestProducerFactory());
     }
 }

@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class ProductService{
@@ -19,6 +21,12 @@ public class ProductService{
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ProductResponse addProduct(ProductRequest productRequest) {
+
+        Optional<Product> sameName = productRepository.findByProductName(productRequest.getProductName());
+
+        if (sameName.isPresent()) {
+            throw new RuntimeException("Same product already exist");
+        }
         // 1. Convert DTO to Entity
         Product product = objectMapper.convertValue(productRequest, Product.class);
         product.setProductStatus(ProductStatus.ACTIVE);
@@ -57,9 +65,6 @@ public class ProductService{
 
                     if (productUpdateRequest.getQuantity() != null)
                         existingProduct.setQuantity(productUpdateRequest.getQuantity());
-
-                    if (productUpdateRequest.getProductStatus() != null)
-                        existingProduct.setProductStatus(productUpdateRequest.getProductStatus());
 
                     Product updated = productRepository.save(existingProduct);
 

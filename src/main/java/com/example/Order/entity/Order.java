@@ -26,9 +26,13 @@ public class Order {
     private Double productPrice;
     private Integer quantity;
 
+    @Column(name = "order_amount")
+    private Double amount;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "order_payment")
     private OrderPayment orderPayment;
 }

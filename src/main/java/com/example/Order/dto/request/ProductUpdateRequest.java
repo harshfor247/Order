@@ -19,6 +19,4 @@ public class ProductUpdateRequest {
     private String productDescription;
 
     private Integer quantity;
-
-    private ProductStatus productStatus;
 }

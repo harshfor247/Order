@@ -19,10 +19,4 @@ public class OrderUpdateRequest {
     private String productName;
     private Double productPrice;
     private Integer quantity;
-
-    @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus;
-
-    @Enumerated(EnumType.STRING)
-    private OrderPayment orderPayment;
 }
