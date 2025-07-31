@@ -1,6 +1,7 @@
 package com.example.Order.config;
 
 import com.example.Order.dto.response.TransactionResponse;
+import com.example.Order.dto.response.UpdatedOrderResponse;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
@@ -17,8 +18,8 @@ import java.util.Map;
 public class KafkaOrderConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, TransactionResponse> paymentResponseConsumerFactory() {
-        JsonDeserializer<TransactionResponse> deserializer = new JsonDeserializer<>(TransactionResponse.class, false);
+    public ConsumerFactory<String, UpdatedOrderResponse> paymentResponseConsumerFactory() {
+        JsonDeserializer<UpdatedOrderResponse> deserializer = new JsonDeserializer<>(UpdatedOrderResponse.class, false);
         deserializer.addTrustedPackages("*");
         deserializer.setUseTypeMapperForKey(false);
         Map<String, Object> props = new HashMap<>();
@@ -31,8 +32,8 @@ public class KafkaOrderConsumerConfig {
 
 
     @Bean(name = "paymentResponseKafkaListenerFactory")
-    public ConcurrentKafkaListenerContainerFactory<String, TransactionResponse> paymentResponseKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, TransactionResponse> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, UpdatedOrderResponse> paymentResponseKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, UpdatedOrderResponse> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(paymentResponseConsumerFactory());
         return factory;

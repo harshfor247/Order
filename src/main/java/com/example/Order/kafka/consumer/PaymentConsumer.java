@@ -1,8 +1,9 @@
 package com.example.Order.kafka.consumer;
 
-import com.example.Order.dto.response.TransactionResponse;
+import com.example.Order.dto.response.UpdatedOrderResponse;
 import com.example.Order.entity.Product;
 import com.example.Order.enums.OrderPayment;
+import com.example.Order.enums.OrderStatus;
 import com.example.Order.enums.PaymentStatus;
 import com.example.Order.enums.ProductStatus;
 import com.example.Order.repository.OrderRepository;
@@ -30,15 +31,15 @@ public class PaymentConsumer {
             groupId = "order-group",
             containerFactory = "paymentResponseKafkaListenerFactory"
     )
-    public void listenPaymentResult(TransactionResponse paymentResponse) {
-        Long orderId = paymentResponse.getOrderId();
+    public void listenPaymentResult(UpdatedOrderResponse updatedOrderResponse) {
+        Long orderId = updatedOrderResponse.getOrderId();
 
         if (orderId == null) {
             System.err.println("ERROR: orderId is null in paymentResponse. Skipping processing.");
             return; // or throw exception if appropriate
         }
 
-        PaymentStatus status = paymentResponse.getPaymentStatus();
+        PaymentStatus status = updatedOrderResponse.getPaymentStatus();
 
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
 
@@ -47,18 +48,20 @@ public class PaymentConsumer {
 
             if (status == PaymentStatus.SUCCESS) {
                 order.setOrderPayment(OrderPayment.PURCHASED);
+                order.setOrderStatus(OrderStatus.INACTIVE);
+                String productName = order.getProductName();
+                Integer purchasedQuantity = order.getQuantity();
                 orderRepository.save(order);
 
                 // Update product quantity
-                Integer updatedQuantity = order.getQuantity();
-
-                Optional<Product> productOpt = productRepository.findByProductName(order.getProductName());
+                Optional<Product> productOpt = productRepository.findByProductName(productName);
 
                 if (productOpt.isPresent()) {
                     Product product = productOpt.get();
+                    Integer updatedQuantity = product.getQuantity() - purchasedQuantity;
                     product.setQuantity(updatedQuantity);
                     productRepository.save(product);
-                    if(product.getQuantity()==0){
+                    if(updatedQuantity.equals(0)){
                         product.setProductStatus(ProductStatus.INACTIVE);
                     }
                 }
