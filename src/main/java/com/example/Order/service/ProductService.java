@@ -63,8 +63,11 @@ public class ProductService{
                     if (productUpdateRequest.getProductDescription() != null)
                         existingProduct.setProductDescription(productUpdateRequest.getProductDescription());
 
-                    if (productUpdateRequest.getQuantity() != null)
+                    if (productUpdateRequest.getQuantity() != null){
                         existingProduct.setQuantity(productUpdateRequest.getQuantity());
+                    }
+
+                    existingProduct.setProductStatus(ProductStatus.ACTIVE);
 
                     Product updated = productRepository.save(existingProduct);
 
