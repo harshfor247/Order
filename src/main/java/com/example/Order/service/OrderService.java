@@ -57,6 +57,18 @@ public class OrderService {
             throw new CannotCreateOrderException("Cannot create order: insufficient product quantity!");
         }
 
+        List<Order> orders = orderRepository.findByUserId(request.getUserId());
+
+        boolean orderExists = orders.stream().anyMatch(order ->
+                request.getUserId().equals(order.getUserId()) &&
+                request.getProductName().equals(order.getProductName()) &&
+                request.getQuantity().equals(order.getQuantity())
+        );
+
+        if (orderExists) {
+            throw new CannotCreateOrderException("Cannot create Order as it already exists!");
+        }
+
         Order order = objectMapper.convertValue(request, Order.class);
 
         Double amount = request.getProductPrice() * request.getQuantity();
