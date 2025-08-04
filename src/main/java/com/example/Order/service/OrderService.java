@@ -8,6 +8,9 @@ import com.example.Order.entity.Order;
 import com.example.Order.entity.Product;
 import com.example.Order.enums.OrderPayment;
 import com.example.Order.enums.OrderStatus;
+import com.example.Order.exceptions.CannotCreateOrderException;
+import com.example.Order.exceptions.OrderNotFoundException;
+import com.example.Order.exceptions.ProductNotFoundException;
 import com.example.Order.kafka.producer.PaymentProducer;
 import com.example.Order.repository.OrderRepository;
 import com.example.Order.repository.ProductRepository;
@@ -17,7 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -36,7 +38,7 @@ public class OrderService {
         Optional<Product> productOpt = productRepository.findByProductName(request.getProductName());
 
         if (productOpt.isEmpty()) {
-            throw new RuntimeException("Product not found: " + request.getProductName());
+            throw new ProductNotFoundException("Product not found!");
         }
 
         Product product = productOpt.get();
@@ -44,15 +46,15 @@ public class OrderService {
         Integer availableQuantity = product.getQuantity();
 
         if(!request.getProductPrice().equals(availablePrice)){
-            throw new RuntimeException("Requested price is not same as the product price");
+            throw new ProductNotFoundException("Requested price is not same as the product price!");
         }
 
         // 2. Check product quantity
         if (availableQuantity == 0) {
-            throw new RuntimeException("Cannot create order: The Product is INACTIVE");
+            throw new CannotCreateOrderException("Cannot create order: The Product is INACTIVE");
         }
         if (request.getQuantity() > availableQuantity) {
-            throw new RuntimeException("Cannot create order: insufficient product quantity");
+            throw new CannotCreateOrderException("Cannot create order: insufficient product quantity!");
         }
 
         Order order = objectMapper.convertValue(request, Order.class);
@@ -84,7 +86,7 @@ public class OrderService {
         List<Order> orders = orderRepository.findByUserId(userId);
 
         if (orders == null || orders.isEmpty()) {
-            throw new NoSuchElementException("No orders found for user ID: " + userId);
+            throw new OrderNotFoundException("Order not found!");
         }
 
         return orders.stream()
@@ -131,7 +133,8 @@ public class OrderService {
 
                     return ResponseEntity.ok(response);
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new OrderNotFoundException(
+                        "Order not found!"));
     }
 
 
@@ -142,6 +145,7 @@ public class OrderService {
                     orderRepository.save(order);
                     return ResponseEntity.ok("Order deactivated successfully");
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new OrderNotFoundException(
+                        "Order not found!"));
     }
 }

@@ -4,6 +4,8 @@ import com.example.Order.dto.request.ProductUpdateRequest;
 import com.example.Order.dto.response.ProductResponse;
 import com.example.Order.entity.Product;
 import com.example.Order.enums.ProductStatus;
+import com.example.Order.exceptions.ProductAlreadyExistException;
+import com.example.Order.exceptions.ProductNotFoundException;
 import com.example.Order.repository.ProductRepository;
 import com.example.Order.dto.request.ProductRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +29,7 @@ public class ProductService{
         Optional<Product> sameName = productRepository.findByProductName(productRequest.getProductName());
 
         if (sameName.isPresent()) {
-            throw new RuntimeException("Same product already exist");
+            throw new ProductAlreadyExistException("Product already exist!");
         }
         // 1. Convert DTO to Entity
         Product product = objectMapper.convertValue(productRequest, Product.class);
@@ -37,22 +41,25 @@ public class ProductService{
         // 4. Convert Entity to Response DTO
         ProductResponse productResponse = objectMapper.convertValue(savedProduct, ProductResponse.class);
         return productResponse;
-//        ProductResponse productResponse = objectMapper.convertValue(productRequest, ProductResponse.class);
-//        productResponse.setProductStatus(ProductStatus.ACTIVE);
-//        return productRepository.save(productResponse);
     }
 
-    public ResponseEntity<ProductResponse> getProduct(Long productId) {
-        return productRepository.findById(productId)
-                .map(product -> {
-                    ProductResponse productResponse = objectMapper.convertValue(product, ProductResponse.class);
-                    return ResponseEntity.ok(productResponse);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ProductResponse getProduct(Long productId) {
+        Product product = productRepository.findByProductId(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found!"));
+
+        return ProductResponse.builder()
+                .productId(product.getProductId())
+                .productName(product.getProductName())
+                .productPrice(product.getProductPrice())
+                .productDescription(product.getProductDescription())
+                .quantity(product.getQuantity())
+                .productStatus(product.getProductStatus())
+                .build();
     }
+
 
     public ResponseEntity<ProductResponse> updateProduct(ProductUpdateRequest productUpdateRequest) {
-        return productRepository.findById(productUpdateRequest.getProductId())
+        return productRepository.findByProductId(productUpdateRequest.getProductId())
                 .map(existingProduct -> {
                     if (productUpdateRequest.getProductName() != null)
                         existingProduct.setProductName(productUpdateRequest.getProductName());
@@ -71,21 +78,31 @@ public class ProductService{
 
                     Product updated = productRepository.save(existingProduct);
 
-                    // Convert to UserResponse
-                    ProductResponse response = objectMapper.convertValue(updated, ProductResponse.class);
+                    // Convert to OrderResponse
+                    ProductResponse response = ProductResponse.builder()
+                            .productId(updated.getProductId())
+                            .productName(updated.getProductName())
+                            .productPrice(updated.getProductPrice())
+                            .productDescription(updated.getProductDescription())
+                            .quantity(updated.getQuantity())
+                            .productStatus(updated.getProductStatus())
+                            .build();
+
                     return ResponseEntity.ok(response);
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ProductNotFoundException(
+                        "Product not found!"));
     }
 
     public ResponseEntity<String> deactivateProduct(Long productId) {
-        return productRepository.findById(productId)
+        return productRepository.findByProductId(productId)
                 .map(product -> {
                     product.setProductStatus(ProductStatus.INACTIVE);
                     productRepository.save(product);
                     return ResponseEntity.ok("Product deactivated successfully");
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ProductNotFoundException(
+                        "Product not found!"));
     }
 }
 
